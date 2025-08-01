@@ -2,7 +2,10 @@ baseURL = "https://limubai404.github.io/"
 languageCode = "zh-cn"
 title = "李慕白的技术博客"
 theme = "PaperMod"
-paginate = 5
+
+# 修正分页配置
+[pagination]
+  pagerSize = 5
 
 # 为搜索功能生成索引文件
 [outputs]
