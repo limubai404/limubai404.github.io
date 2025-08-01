@@ -1,6 +1,6 @@
 baseURL = "https://limubai404.github.io/"
 languageCode = "zh-cn"
-title = "我的测试博客"
+title = "我的技术博客"
 theme = "PaperMod"
 
 [params]
@@ -8,7 +8,7 @@ theme = "PaperMod"
 
     [params.homeInfoParams]
         Title = "欢迎 👋"
-        Content = "这是一个测试页面。如果能看到它，就说明我们的网站部署成功了！"
+        Content = "个人技术分享以及总结！"
 
 [menu]
   [[menu.main]]
