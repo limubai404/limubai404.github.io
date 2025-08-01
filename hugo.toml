@@ -1,14 +1,32 @@
+# hugo.toml
+
 baseURL = "https://limubai404.github.io/"
 languageCode = "zh-cn"
 title = "我的技术博客"
 theme = "PaperMod"
 
-[params]
-    defaultTheme = "dark"
+# --- 添加这部分，为搜索功能生成索引 ---
+[outputs]
+  home = [ "HTML", "RSS", "JSON" ]
+# ------------------------------------
 
-    [params.homeInfoParams]
-        Title = "欢迎 👋"
-        Content = "个人技术分享以及总结！"
+[params]
+  defaultTheme = "dark"
+
+  # --- 添加这部分，配置搜索功能 ---
+  [params.fuseOpts]
+    isCaseSensitive = false
+    shouldSort = true
+    location = 0
+    distance = 1000
+    threshold = 0.4
+    minMatchCharLength = 0
+    keys = ["title", "permalink", "summary", "content"]
+  # -------------------------------
+
+  [params.homeInfoParams]
+    Title = "欢迎 👋"
+    Content = "个人技术分享以及总结！"
 
 [menu]
   [[menu.main]]
@@ -16,3 +34,10 @@ theme = "PaperMod"
     name = "归档"
     url = "/archives/"
     weight = 10
+  # --- 添加搜索菜单入口 ---
+  [[menu.main]]
+    identifier = "search"
+    name = "搜索 🔍"
+    url = "/search/"
+    weight = 20
+  # -------------------------
