@@ -1,26 +1,7 @@
-baseURL = 'http://example.org/'
-languageCode = 'zh-cn'
-title = '我的技术博客'
-theme = 'PaperMod'
+baseURL = "https://limubai404.github.io/"
+languageCode = "en-us"
+title = "My Test Blog"
+theme = "PaperMod"
 
-[menu]
-[[menu.main]]
-    identifier = "archives"
-    name = "归档"
-    url = "/archives/"
-    weight = 10
-[[menu.main]]
-    identifier = "tags"
-    name = "标签"
-    url = "/tags/"
-    weight = 20
-[[menu.main]]
-    identifier = "search"
-    name = "搜索 🔍"
-    url = "/search/"
-    weight = 30
-[[menu.main]]
-    identifier = "about"
-    name = "关于"
-    url = "/about/"
-    weight = 40
+[params]
+    defaultTheme = "dark"
