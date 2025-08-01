@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I2C通信协议动画演示</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #2a2a72 0%, #009ffd 100%); min-height: 100vh; padding: 20px; color: #333; }
+        .container { max-width: 1400px; margin: 0 auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); backdrop-filter: blur(10px); }
+        h1 { text-align: center; color: #4a5568; margin-bottom: 20px; font-size: 2.2em; background: linear-gradient(45deg, #2a2a72, #009ffd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .intro { text-align: center; margin-bottom: 25px; padding: 15px; background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%); border-radius: 15px; color: white; font-size: 1em; }
+        .main-content { display: grid; grid-template-columns: 1fr 350px; gap: 30px; margin-bottom: 30px; }
+        .left-panel, .right-panel { display: flex; flex-direction: column; gap: 20px; }
+        .i2c-container { position: relative; height: 320px; background: #2d3748; border-radius: 15px; overflow: hidden; box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.3); }
+        .device { position: absolute; width: 100px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; color: white; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); text-align: center; line-height: 1.2; }
+        .master { top: 30px; left: 30px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .slave { top: 30px; right: 30px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .wire { position: absolute; height: 3px; background: linear-gradient(90deg, #ff9a9e, #fad0c4); border-radius: 2px; left: 130px; width: calc(100% - 260px); transition: all 0.1s ease-in-out; }
+        .scl { top: 120px; }
+        .sda { top: 200px; }
+        .wire-label { position: absolute; left: -50px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #e2e8f0; font-weight: bold; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); }
+        .status { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.8); color: white; padding: 8px 16px; border-radius: 15px; font-size: 12px; z-index: 10; }
+        .data-display { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; }
+        .data-box { background: rgba(255, 255, 255, 0.9); padding: 8px 12px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); text-align: center; }
+        .data-title { font-size: 10px; color: #666; margin-bottom: 2px; }
+        .data-value { font-size: 14px; font-weight: bold; color: #2d3748; font-family: 'Courier New', monospace; }
+        .control-panel, .waveform-container { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); }
+        .control-section { margin-bottom: 20px; }
+        .section-title { font-size: 16px; font-weight: bold; color: #4a5568; margin-bottom: 10px; border-bottom: 2px solid #2a2a72; padding-bottom: 5px; }
+        .input-group, .control-buttons { margin-bottom: 15px; }
+        .input-group label { font-size: 12px; color: #666; font-weight: bold; display: block; margin-bottom: 5px; }
+        .input-group input { width: 100%; padding: 8px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-family: 'Courier New', monospace; }
+        .control-buttons { display: flex; gap: 10px; }
+        .btn { background: linear-gradient(135deg, #2a2a72 0%, #009ffd 100%); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 159, 253, 0.4); flex-grow: 1; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 159, 253, 0.6); }
+        .waveform-container { height: 280px; }
+        .waveform-title { font-size: 16px; font-weight: bold; text-align: center; margin-bottom: 15px; }
+        .waveform-canvas { width: 100%; height: 220px; }
+        .explanation { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .explain-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); border-left: 5px solid #2a2a72; }
+        .explain-title { font-size: 16px; font-weight: bold; margin-bottom: 10px; }
+        .explain-text { color: #666; line-height: 1.6; font-size: 14px; }
+        @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 I2C 通信协议动画演示</h1>
+        
+        <div class="intro">
+            <p>I2C (Inter-Integrated Circuit) 是一种双线式、半双工、同步的串行总线。它仅使用 SCL (时钟) 和 SDA (数据) 两条线即可连接多个设备。</p>
+        </div>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="i2c-container">
+                    <div class="status" id="status">准备开始通信...</div>
+                    
+                    <div class="device master"><div>主设备<br>Master</div></div>
+                    <div class="device slave"><div>从设备<br>Slave</div></div>
+                    
+                    <div class="wire scl"><div class="wire-label">SCL</div></div>
+                    <div class="wire sda"><div class="wire-label">SDA</div></div>
+
+                    <div class="data-display">
+                        <div class="data-box">
+                            <div class="data-title">当前发送</div>
+                            <div class="data-value" id="currentDataValue">--</div>
+                        </div>
+                        <div class="data-box">
+                            <div class="data-title">当前步骤</div>
+                            <div class="data-value" id="currentStepDisplay">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="control-panel">
+                    <div class="control-section">
+                        <div class="section-title">📡 数据设置</div>
+                        <div class="input-group">
+                            <label for="addressInput">从设备地址 (7-bit):</label>
+                            <input type="text" id="addressInput" value="0x48" maxlength="4">
+                        </div>
+                        <div class="input-group">
+                            <label for="dataInput">要写入的数据:</label>
+                            <input type="text" id="dataInput" value="0xA5" maxlength="4">
+                        </div>
+                    </div>
+                    
+                    <div class="control-section">
+                        <div class="section-title">🎮 控制面板</div>
+                        <div class="control-buttons">
+                           <button class="btn" onclick="startTransmission()">🚀 开始传输</button>
+                           <button class="btn" onclick="stopAnimation()">⏹️ 停止</button>
+                           <button class="btn" onclick="resetAnimation()">🔄 重置</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="waveform-container">
+                    <div class="waveform-title">📊 I2C信号波形图</div>
+                    <canvas id="waveformCanvas" class="waveform-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="explanation">
+            <div class="explain-card">
+                <div class="explain-title">🟢 START 条件</div>
+                <div class="explain-text">当 SCL 保持高电平时，SDA 从高电平跳变为低电平，标志着一次通信的开始。</div>
+            </div>
+            <div class="explain-card">
+                <div class="explain-title">🔴 STOP 条件</div>
+                <div class="explain-text">当 SCL 保持高电平时，SDA 从低电平跳变为高电平，标志着一次通信的结束。</div>
+            </div>
+            <div class="explain-card">
+                <div class="explain-title">🤝 ACK / NACK</div>
+                <div class="explain-text">每当主设备发送完一个字节（地址或数据）后，接收方（从设备）会在第9个时钟周期将 SDA 拉低以示确认（ACK）。</div>
+            </div>
+             <div class="explain-card">
+                <div class="explain-title"> SDA & SCL </div>
+                <div class="explain-text">SDA 是双向数据线，SCL 是时钟线。数据在 SCL 为高电平时必须保持稳定，在 SCL 为低电平时才允许变化。</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const statusEl = document.getElementById('status');
+        const currentDataValueEl = document.getElementById('currentDataValue');
+        const currentStepDisplayEl = document.getElementById('currentStepDisplay');
+        const addressInputEl = document.getElementById('addressInput');
+        const dataInputEl = document.getElementById('dataInput');
+        const canvas = document.getElementById('waveformCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- State Variables ---
+        let animationTimeout;
+        let isTransmitting = false;
+        let waveformData = { scl: [], sda: [] };
+        let totalAnimationSteps = 0;
+
+        // --- Canvas & Waveform Functions ---
+        function initializeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            clearCanvasAndGrid();
+        }
+
+        function clearCanvasAndGrid() {
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, width, height);
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            
+            const signalLabels = ['SCL', 'SDA'];
+            const signalHeight = height / signalLabels.length;
+            
+            ctx.font = 'bold 12px Microsoft YaHei';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+
+            for (let i = 0; i < signalLabels.length; i++) {
+                const y = signalHeight * (i + 0.5);
+                ctx.beginPath();
+                ctx.moveTo(0, signalHeight * i);
+                ctx.lineTo(width, signalHeight * i);
+                ctx.stroke();
+                ctx.fillStyle = '#4a5568';
+                ctx.fillText(signalLabels[i], 10, y);
+            }
+        }
+
+        function drawWaveform() {
+            if (!ctx) return;
+            clearCanvasAndGrid();
+            
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+            const signals = [
+                { data: waveformData.scl, color: '#4ecdc4' },
+                { data: waveformData.sda, color: '#ff6b6b' }
+            ];
+
+            const paddingLeft = 50;
+            const drawableWidth = width - paddingLeft - 10;
+            
+            signals.forEach((signal, index) => {
+                if (signal.data.length === 0) return;
+                
+                const signalRegionHeight = height / signals.length;
+                const offsetY = signalRegionHeight * index;
+                const baseY = offsetY + signalRegionHeight / 2;
+
+                ctx.strokeStyle = signal.color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                const initialY = baseY - (1 ? 20 : -20); // Start high
+                ctx.moveTo(paddingLeft, initialY);
+
+                for (let i = 0; i < signal.data.length; i++) {
+                    const x = paddingLeft + ((i + 1) / totalAnimationSteps) * drawableWidth;
+                    const y = baseY - (signal.data[i] ? 20 : -20);
+                    
+                    if (i > 0) {
+                        const prevX = paddingLeft + (i / totalAnimationSteps) * drawableWidth;
+                        const prevY = baseY - (signal.data[i - 1] ? 20 : -20);
+                        ctx.lineTo(prevX, prevY);
+                        ctx.lineTo(prevX, y);
+                    } else {
+                        ctx.lineTo(paddingLeft, y);
+                    }
+                    ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            });
+        }
+        
+        // 新增函数：用于更新线路的实时样式
+        function updateWireStyles(sclLevel, sdaLevel) {
+            const sclWire = document.querySelector('.wire.scl');
+            const sdaWire = document.querySelector('.wire.sda');
+
+            const high_color = 'linear-gradient(90deg, #43e97b, #38f9d7)';
+            const high_shadow = '0 0 10px #38f9d7';
+            const low_color = 'linear-gradient(90deg, #ff9a9e, #fad0c4)';
+            const low_shadow = 'none';
+
+            if (sclLevel === 1) {
+                sclWire.style.background = high_color;
+                sclWire.style.boxShadow = high_shadow;
+            } else {
+                sclWire.style.background = low_color;
+                sclWire.style.boxShadow = low_shadow;
+            }
+
+            if (sdaLevel === 1) {
+                sdaWire.style.background = high_color;
+                sdaWire.style.boxShadow = high_shadow;
+            } else {
+                sdaWire.style.background = low_color;
+                sdaWire.style.boxShadow = low_shadow;
+            }
+        }
+
+        function addWaveformData(scl, sda) {
+            waveformData.scl.push(scl);
+            waveformData.sda.push(sda);
+            requestAnimationFrame(drawWaveform);
+        }
+
+        // --- Animation Logic ---
+        function parseHexInput(input, defaultValue) {
+            if (!input) return defaultValue;
+            const value = input.replace(/0x/i, '').replace(/[^0-9A-Fa-f]/g, '');
+            return value ? parseInt(value, 16) : defaultValue;
+        }
+
+        function updateDisplay(status, data, step) {
+            statusEl.textContent = status;
+            currentDataValueEl.textContent = data;
+            currentStepDisplayEl.textContent = step;
+        }
+
+        function stopAnimation() {
+            clearTimeout(animationTimeout);
+            isTransmitting = false;
+        }
+
+        function resetAnimation() {
+            stopAnimation();
+            waveformData = { scl: [], sda: [] };
+            totalAnimationSteps = 0;
+            clearCanvasAndGrid();
+            updateDisplay('准备开始通信...', '--', '-');
+            updateWireStyles(1, 1); // 修改：重置时恢复线路为空闲高电平
+        }
+
+        function runAnimationStep(steps, index) {
+            if (index >= steps.length || !isTransmitting) {
+                isTransmitting = false;
+                if (index >= steps.length) {
+                     updateDisplay('传输完成!', '--', '完成');
+                     updateWireStyles(1, 1); // 修改：结束后恢复线路为空闲高电平
+                }
+                return;
+            }
+
+            const step = steps[index];
+            updateDisplay(step.status, step.data, step.step);
+            addWaveformData(step.scl, step.sda);
+            updateWireStyles(step.scl, step.sda); // 修改：在每一步更新线路样式
+
+            animationTimeout = setTimeout(() => {
+                runAnimationStep(steps, index + 1);
+            }, step.delay);
+        }
+
+        function startTransmission() {
+            if (isTransmitting) return;
+            
+            resetAnimation();
+            isTransmitting = true;
+
+            const slaveAddress = parseHexInput(addressInputEl.value, 0x48);
+            const dataByte = parseHexInput(dataInputEl.value, 0xA5);
+            const addressByte = (slaveAddress << 1) | 0;
+
+            const steps = [];
+
+            // 1. START
+            steps.push({ scl: 1, sda: 1, delay: 300, status: '发出START信号', data: '--', step: 'START' });
+            steps.push({ scl: 1, sda: 0, delay: 300, status: '发出START信号', data: '--', step: 'START' });
+
+            // 2. Address bits
+            for (let i = 7; i >= 0; i--) {
+                const bit = (addressByte >> i) & 1;
+                steps.push({ scl: 0, sda: bit, delay: 150, status: '发送地址', data: `0x${addressByte.toString(16).toUpperCase()}`, step: `Addr Bit ${7-i}` });
+                steps.push({ scl: 1, sda: bit, delay: 150, status: '发送地址', data: `0x${addressByte.toString(16).toUpperCase()}`, step: `Addr Bit ${7-i}` });
+            }
+
+            // 3. ACK for Address
+            steps.push({ scl: 0, sda: 1, delay: 150, status: '等待ACK', data: '--', step: 'Addr ACK' });
+            steps.push({ scl: 1, sda: 0, delay: 150, status: '接收到ACK', data: 'ACK', step: 'Addr ACK' });
+
+            // 4. Data bits
+            for (let i = 7; i >= 0; i--) {
+                const bit = (dataByte >> i) & 1;
+                steps.push({ scl: 0, sda: bit, delay: 150, status: '发送数据', data: `0x${dataByte.toString(16).toUpperCase()}`, step: `Data Bit ${7-i}` });
+                steps.push({ scl: 1, sda: bit, delay: 150, status: '发送数据', data: `0x${dataByte.toString(16).toUpperCase()}`, step: `Data Bit ${7-i}` });
+            }
+
+            // 5. ACK for Data
+            steps.push({ scl: 0, sda: 1, delay: 150, status: '等待ACK', data: '--', step: 'Data ACK' });
+            steps.push({ scl: 1, sda: 0, delay: 150, status: '接收到ACK', data: 'ACK', step: 'Data ACK' });
+
+            // 6. STOP
+            steps.push({ scl: 0, sda: 0, delay: 300, status: '发出STOP信号', data: '--', step: 'STOP' });
+            steps.push({ scl: 1, sda: 0, delay: 300, status: '发出STOP信号', data: '--', step: 'STOP' });
+            steps.push({ scl: 1, sda: 1, delay: 300, status: '发出STOP信号', data: '--', step: 'STOP' });
+            
+            totalAnimationSteps = steps.length;
+            runAnimationStep(steps, 0);
+        }
+
+        // --- Initialization ---
+        window.addEventListener('load', () => {
+            initializeCanvas();
+            resetAnimation();
+        });
+        window.addEventListener('resize', () => {
+             initializeCanvas();
+             drawWaveform();
+        });
+    </script>
+</body>
+</html>
