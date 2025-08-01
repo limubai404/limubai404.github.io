@@ -1,19 +1,54 @@
-# hugo.toml
-
 baseURL = "https://limubai404.github.io/"
 languageCode = "zh-cn"
-title = "我的技术博客"
+title = "李慕白的技术博客"
 theme = "PaperMod"
+paginate = 5
 
-# --- 添加这部分，为搜索功能生成索引 ---
+# 为搜索功能生成索引文件
 [outputs]
   home = [ "HTML", "RSS", "JSON" ]
-# ------------------------------------
 
 [params]
-  defaultTheme = "dark"
+  author = "李慕白"
+  description = "个人技术分享以及总结！"
+  defaultTheme = "auto" # 允许用户在浅色/深色模式间切换
+  ShowReadingTime = true
+  ShowShareButtons = true
+  ShowPostNavLinks = true
+  ShowCodeCopyButtons = true # 为代码块添加“复制”按钮
 
-  # --- 添加这部分，配置搜索功能 ---
+  # 封面图配置
+  [params.cover]
+    hidden = false 
+    hiddenInList = false
+    hiddenInSingle = false
+
+  # 个人简介模式主页
+  [params.profileMode]
+    enabled = true
+    title = "李慕白 (limubai404)"
+    subtitle = "一名热衷于分享的开发者 | 硬件爱好者 | 终身学习者"
+    imageUrl = "/avatar.png"
+    imageWidth = 120
+    imageHeight = 120
+    imageTitle = "我的头像"
+    
+    [[params.profileMode.buttons]]
+      name = "所有文章"
+      url = "/archives"
+    [[params.profileMode.buttons]]
+      name = "GitHub"
+      url = "https://github.com/limubai404"
+
+  # 社交图标
+  [[params.socialIcons]]
+    name = "github"
+    url = "https://github.com/limubai404"
+  [[params.socialIcons]]
+    name = "email"
+    url = "mailto:limubai404@gmail.com"
+
+  # 搜索功能配置
   [params.fuseOpts]
     isCaseSensitive = false
     shouldSort = true
@@ -22,11 +57,6 @@ theme = "PaperMod"
     threshold = 0.4
     minMatchCharLength = 0
     keys = ["title", "permalink", "summary", "content"]
-  # -------------------------------
-
-  [params.homeInfoParams]
-    Title = "欢迎 👋"
-    Content = "个人技术分享以及总结！"
 
 [menu]
   [[menu.main]]
@@ -34,10 +64,13 @@ theme = "PaperMod"
     name = "归档"
     url = "/archives/"
     weight = 10
-  # --- 添加搜索菜单入口 ---
   [[menu.main]]
     identifier = "search"
     name = "搜索 🔍"
     url = "/search/"
     weight = 20
-  # -------------------------
+  [[menu.main]]
+    identifier = "tags"
+    name = "标签"
+    url = "/tags/"
+    weight = 30
