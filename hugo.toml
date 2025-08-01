@@ -1,7 +1,13 @@
 baseURL = "https://limubai404.github.io/"
+<<<<<<< HEAD
 languageCode = "en-us"
 title = "My Test Blog"
 theme = "PaperMod"
+=======
+languageCode = 'zh-cn'
+title = '我的技术博客'
+theme = 'PaperMod'
+>>>>>>> 10380db (Fix configuration for deployment)
 
 [params]
     defaultTheme = "dark"
