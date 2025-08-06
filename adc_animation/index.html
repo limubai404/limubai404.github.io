@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADC 工作原理动画演示</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>ADC (模数转换器) 工作原理</h1>
+    <div class="container">
+        <div id="plot">
+            <svg id="svg-plot" width="700" height="300"></svg>
+            <div id="sample-dot"></div>
+        </div>
+        <div id="adc-chip">
+            <div class="title">ADC</div>
+            <div id="digital-output">
+                <p>Binary: <span id="binary-val">----</span></p>
+                <p>Decimal: <span id="decimal-val">--</span></p>
+            </div>
+        </div>
+    </div>
+    <div id="explanation">
+        <p>点击“开始”按钮，观看 ADC 如何将模拟信号转换为数字信号。</p>
+    </div>
+    <button id="start-btn">开始动画</button>
+
+    <script src="script.js"></script>
+</body>
+</html>

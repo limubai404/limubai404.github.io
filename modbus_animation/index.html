@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modbus RTU 通信动画演示</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Modbus RTU 通信动画演示</h1>
+    <div class="container">
+        <div id="master" class="node">
+            <div class="title">主站 (Master)</div>
+            <div class="memory"></div>
+        </div>
+        <div id="bus"></div>
+        <div id="slave" class="node">
+            <div class="title">从站 (Slave)</div>
+            <div class="memory">
+                <p><b>内部寄存器:</b></p>
+                <p>40001: 0xABCD</p>
+                <p>40002: 0x1234</p>
+            </div>
+        </div>
+        <div id="packet" class="hidden">
+            <div id="packet-header"></div>
+            <div id="packet-data"></div>
+        </div>
+    </div>
+    <div id="explanation">
+        <p>点击“开始”按钮，观看一次 Modbus RTU 通信，其中主站将读取从站地址为 1 的设备中，起始于 40001 的 2 个保持寄存器。</p>
+    </div>
+    <button id="start-btn">开始动画</button>
+
+    <script src="script.js"></script>
+</body>
+</html>
