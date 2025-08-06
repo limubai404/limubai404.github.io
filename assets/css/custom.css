@@ -1,0 +1,16 @@
+/* Custom CSS for PaperMod */
+
+/* Add a more modern font */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Improve readability */
+.post-content {
+    line-height: 1.8;
+}
+
+/* Custom link color */
+a {
+    color: #007bff;
+}

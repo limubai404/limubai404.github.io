@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://limubai404.github.io/sitemap.xml

@@ -1,0 +1,8 @@
+<!-- Custom Favicons -->
+<link rel="icon" href="{{ "favicon.ico" | absURL }}">
+<link rel="apple-touch-icon" href="{{ "apple-touch-icon.png" | absURL }}">
+
+<!-- Custom CSS -->
+{{ range .Site.Params.customCSS -}}
+    <link rel="stylesheet" href="{{ . | absURL }}">
+{{- end }}
