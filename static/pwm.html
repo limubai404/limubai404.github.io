@@ -131,7 +131,7 @@
 		let yAnalog = 0; // RC 输出当前值
 		const pwmData = [];
 		const dacData = [];
-		const maxPoints = 1000;
+		let maxPoints = 1000; // 根据频率动态调整
 
 		const el = (id) => document.getElementById(id);
 		const statusEl = el('status');
@@ -213,6 +213,10 @@
 			const tau = R * C;
 			const pointsPerSec = clamp(parseFloat(ppsEl.value) || 1200, 100, 5000);
 			const targetDt = 1.0 / pointsPerSec;
+			// 动态设置显示窗口：固定显示 ~6 个周期
+			const displayCycles = 6;
+			const samplesPerCycle = 40; // 每周期采样点
+			maxPoints = Math.max(120, Math.round(samplesPerCycle * displayCycles));
 
 			// 累积多子步，避免高频 PWM 在刷新率较低时被“平均”导致看不到方波
 			let steps = Math.max(1, Math.round(dt / targetDt));
@@ -231,17 +235,17 @@
 				const alpha = tau > 0 ? Math.min(1.0, subDt / tau) : 1.0;
 				yAnalog += alpha * (x - yAnalog);
 
-				pushPoint(pwmData, x);
-				pushPoint(dacData, yAnalog);
+				pushPointLimited(pwmData, x, maxPoints);
+				pushPointLimited(dacData, yAnalog, maxPoints);
 			}
 
 			drawSeries(pwmCtx, pwmData, 0, Vh);
 			drawSeries(dacCtx, dacData, 0, Vh);
 		}
 
-		function pushPoint(arr, v) {
+		function pushPointLimited(arr, v, limit) {
 			arr.push(v);
-			if (arr.length > maxPoints) arr.shift();
+			if (arr.length > limit) arr.shift();
 		}
 
 		function drawSeries(ctx, arr, vmin, vmax) {
