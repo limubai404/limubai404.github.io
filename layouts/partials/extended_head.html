@@ -6,3 +6,13 @@
 {{ range .Site.Params.customCSS -}}
     <link rel="stylesheet" href="{{ . | absURL }}">
 {{- end }}
+
+<!-- Math (KaTeX) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" integrity="sha256-6d3H5y1wRr3H9DZlN2x3E3Xy7lHfP5cV6Hn1t3wK4fs=" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js" integrity="sha256-3b2Rrqy2k6Vx0pD2v6o9hS+U4mK4Yw9B2iJj2uPqL4w=" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js" integrity="sha256-7w1v1wHkqkJt8zjYw0P8k4k6M2yqkqv2b3x3sH7lqGA=" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, {delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ]});"></script>

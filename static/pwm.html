@@ -214,20 +214,27 @@
 			const pointsPerSec = clamp(parseFloat(ppsEl.value) || 1200, 100, 5000);
 			const targetDt = 1.0 / pointsPerSec;
 
-			// Accumulate time with a fixed draw rate
-			if (dt < targetDt * 0.6) return; // throttle draw
+			// 累积多子步，避免高频 PWM 在刷新率较低时被“平均”导致看不到方波
+			let steps = Math.max(1, Math.round(dt / targetDt));
+			// 保证每周期至少若干采样点（提高可视化精度）
+			const samplesPerCycle = 20;
+			steps = Math.max(steps, Math.ceil(f * dt * samplesPerCycle));
 
-			// Advance PWM phase
-			const T = 1.0 / f;
-			phase = (phase + dt / T) % 1.0;
-			const x = (phase < D) ? Vh : 0.0; // PWM sample (0 or Vh)
+			const subDt = dt / steps;
+			for (let s = 0; s < steps; s++) {
+				// 推进相位并生成数字 PWM 电平
+				const T = 1.0 / f;
+				phase = (phase + subDt / T) % 1.0;
+				const x = (phase < D) ? Vh : 0.0;
 
-			// RC discrete-time low-pass: y += (dt/tau) * (x - y)
-			const alpha = tau > 0 ? Math.min(1.0, dt / tau) : 1.0;
-			yAnalog += alpha * (x - yAnalog);
+				// RC 离散近似
+				const alpha = tau > 0 ? Math.min(1.0, subDt / tau) : 1.0;
+				yAnalog += alpha * (x - yAnalog);
 
-			pushPoint(pwmData, x);
-			pushPoint(dacData, yAnalog);
+				pushPoint(pwmData, x);
+				pushPoint(dacData, yAnalog);
+			}
+
 			drawSeries(pwmCtx, pwmData, 0, Vh);
 			drawSeries(dacCtx, dacData, 0, Vh);
 		}

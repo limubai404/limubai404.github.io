@@ -3,6 +3,7 @@ title: "交互式动画：理解 PWM 原理与 PWM 输出 DAC"
 date: 2025-08-13T10:00:00+08:00
 draft: false
 tags: ["PWM", "DAC", "嵌入式", "信号处理", "动画"]
+math: true
 ---
 
 ## 背景
@@ -23,9 +24,9 @@ tags: ["PWM", "DAC", "嵌入式", "信号处理", "动画"]
 
 ## 关键公式与要点
 
-- 期望平均电压：\( V_{avg} = D \times V_{high} \)，其中 \( D \in [0,1] \)。
-- 一阶 RC 低通的离散近似：\( y[n] = y[n-1] + \alpha (x[n] - y[n-1]) \)，\( \alpha \approx \frac{\Delta t}{RC} \)。
-- 选频建议：PWM 载波频率要显著高于目标模拟信号变化速率；τ 取值权衡“纹波”与“响应”。
+- **期望平均电压**：\( V_{\text{avg}} = D \cdot V_{\text{high}} \)，其中 \( D \in [0,1] \)。
+- **一阶 RC 低通的离散近似**：\( y[n] = y[n-1] + \alpha\,(x[n] - y[n-1]) \)，\( \alpha \approx \tfrac{\Delta t}{RC} \)。
+- **选频建议**：PWM 载波频率要显著高于目标模拟信号变化速率；\(\tau=RC\) 取值权衡“纹波”与“响应”。
 
 ---
 
