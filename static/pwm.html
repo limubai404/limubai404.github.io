@@ -215,14 +215,14 @@
 			const targetDt = 1.0 / pointsPerSec;
 			// 动态设置显示窗口：固定显示 ~6 个周期
 			const displayCycles = 6;
-			const samplesPerCycle = 40; // 每周期采样点
-			maxPoints = Math.max(120, Math.round(samplesPerCycle * displayCycles));
+			const windowSamplesPerCycle = 40; // 每周期采样点（仅用于窗口大小）
+			maxPoints = Math.max(120, Math.round(windowSamplesPerCycle * displayCycles));
 
 			// 累积多子步，避免高频 PWM 在刷新率较低时被“平均”导致看不到方波
 			let steps = Math.max(1, Math.round(dt / targetDt));
 			// 保证每周期至少若干采样点（提高可视化精度）
-			const samplesPerCycle = 20;
-			steps = Math.max(steps, Math.ceil(f * dt * samplesPerCycle));
+			const minSamplesPerCycle = 20;
+			steps = Math.max(steps, Math.ceil(f * dt * minSamplesPerCycle));
 
 			const subDt = dt / steps;
 			for (let s = 0; s < steps; s++) {
