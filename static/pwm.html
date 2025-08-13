@@ -162,8 +162,8 @@
 			[pwmCanvas, dacCanvas].forEach((c) => {
 				const dpr = window.devicePixelRatio || 1;
 				const rect = c.getBoundingClientRect();
-				c.width = rect.width * dpr;
-				c.height = rect.height * dpr;
+				c.width = Math.max(1, Math.floor(rect.width * dpr));
+				c.height = Math.max(1, Math.floor(rect.height * dpr));
 				const ctx = c.getContext('2d');
 				ctx.scale(dpr, dpr);
 			});
@@ -261,14 +261,17 @@
 			if (arr.length === 0) return;
 			ctx.strokeStyle = '#2563eb';
 			ctx.lineWidth = 2;
-			ctx.beginPath();
+			// 逐点绘制极短的水平段，避免在高低电平切换处画满屏的垂直连线
 			for (let i = 0; i < arr.length; i++) {
 				const x = (i / (maxPoints - 1)) * W;
+				const nextX = ((i + 1) / (maxPoints - 1)) * W;
 				const norm = (arr[i] - vmin) / Math.max(1e-9, (vmax - vmin));
 				const y = H - norm * H;
-				if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+				ctx.beginPath();
+				ctx.moveTo(x, y);
+				ctx.lineTo(nextX, y);
+				ctx.stroke();
 			}
-			ctx.stroke();
 
 			// draw axes labels
 			ctx.fillStyle = '#374151';
@@ -298,7 +301,7 @@
 		}
 
 		function loop(ts) {
-			const dt = Math.min(0.05, (ts - lastTimestamp) / 1000); // clamp to 50ms
+			const dt = Math.min(0.02, (ts - lastTimestamp) / 1000); // 更高刷新上限（~50fps）
 			lastTimestamp = ts;
 			step(dt);
 			animHandle = requestAnimationFrame(loop);
