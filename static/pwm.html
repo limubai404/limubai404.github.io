@@ -72,8 +72,8 @@
 						<input id="vhigh" class="input" type="number" min="0" max="5" step="0.1" value="3.3">
 					</div>
 					<div>
-						<div class="label">采样刷新 (每秒绘制点数)</div>
-						<input id="pps" class="input" type="number" min="100" max="5000" step="100" value="1200">
+					<div class="label">采样刷新 (每秒绘制点数)</div>
+						<input id="pps" class="input" type="number" min="100" max="5000" step="100" value="300">
 					</div>
 					<div>
 						<div class="label">R (kΩ)</div>
@@ -215,14 +215,14 @@
 			const pointsPerSec = clamp(parseFloat(ppsEl.value) || 1200, 100, 5000);
 			const targetDt = 1.0 / pointsPerSec;
 			// 动态设置显示窗口：固定显示 ~6 个周期
-			const displayCycles = 6;
+			const displayCycles = 4; // 展示更少周期以增大时间刻度，减小“过快”感受
 			const windowSamplesPerCycle = 40; // 每周期采样点（仅用于窗口大小）
 			maxPoints = Math.max(120, Math.round(windowSamplesPerCycle * displayCycles));
 
 			// 累积多子步，避免高频 PWM 在刷新率较低时被“平均”导致看不到方波
 			let steps = Math.max(1, Math.round(dt / targetDt));
 			// 保证每周期至少若干采样点（提高可视化精度）
-			const minSamplesPerCycle = 20;
+			const minSamplesPerCycle = 40;
 			steps = Math.max(steps, Math.ceil(f * dt * minSamplesPerCycle));
 
 			const subDt = dt / steps;
@@ -262,17 +262,19 @@
 			if (arr.length === 0) return;
 			ctx.strokeStyle = '#2563eb';
 			ctx.lineWidth = 2;
-			// 逐点绘制极短的水平段，避免在高低电平切换处画满屏的垂直连线
-			for (let i = 0; i < arr.length; i++) {
-				const x = (i / (maxPoints - 1)) * W;
-				const nextX = ((i + 1) / (maxPoints - 1)) * W;
-				const norm = (arr[i] - vmin) / Math.max(1e-9, (vmax - vmin));
-				const y = H - norm * H;
-				ctx.beginPath();
-				ctx.moveTo(x, y);
-				ctx.lineTo(nextX, y);
-				ctx.stroke();
+			const xStep = W / Math.max(1, (maxPoints - 1));
+			let x = W - (arr.length - 1) * xStep;
+			const yFrom = (v) => {
+				const norm = (v - vmin) / Math.max(1e-9, (vmax - vmin));
+				return H - norm * H;
+			};
+			ctx.beginPath();
+			ctx.moveTo(x, yFrom(arr[0]));
+			for (let i = 1; i < arr.length; i++) {
+				x += xStep;
+				ctx.lineTo(x, yFrom(arr[i]));
 			}
+			ctx.stroke();
 
 			// draw axes labels
 			ctx.fillStyle = '#374151';
