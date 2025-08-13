@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>PWM 原理与 PWM 输出 DAC 动画演示</title>
+	<style>
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		body {
+			font-family: 'Microsoft YaHei', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial;
+			background: linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%);
+			min-height: 100vh; padding: 20px; color: #1f2937;
+		}
+		.container {
+			max-width: 1400px; margin: 0 auto; background: rgba(255,255,255,0.96);
+			border-radius: 20px; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+			backdrop-filter: blur(10px);
+		}
+		h1 {
+			text-align: center; margin-bottom: 18px; font-size: 2.1em; font-weight: 800;
+			background: linear-gradient(45deg, #36d1dc, #5b86e5);
+			-webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+		}
+		.intro { text-align: center; margin-bottom: 22px; padding: 14px; color: #fff; border-radius: 14px; background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%); }
+		.main { display: grid; grid-template-columns: 1fr 360px; gap: 26px; margin-bottom: 24px; }
+		.panel { background: #fff; border-radius: 16px; padding: 18px; box-shadow: 0 10px 24px rgba(0,0,0,0.08); }
+		.section-title { font-weight: 700; color: #374151; margin-bottom: 10px; border-left: 4px solid #5b86e5; padding-left: 10px; }
+		.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+		.label { font-size: 12px; color: #6b7280; font-weight: 700; margin-bottom: 6px; }
+		.input { width: 100%; padding: 8px 10px; border: 2px solid #e5e7eb; border-radius: 10px; font-family: 'Courier New', monospace; font-size: 14px; }
+		.input:focus { outline: none; border-color: #5b86e5; }
+		.range { width: 100%; }
+		.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 12px; margin-top: 10px; }
+		.kpi { background: #f9fafb; border-radius: 12px; padding: 10px 12px; border: 1px solid #eef2f7; }
+		.kpi .t { font-size: 11px; color: #6b7280; }
+		.kpi .v { font-size: 16px; font-weight: 800; color: #374151; font-family: 'Courier New', monospace; }
+		.btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+		.btn { background: linear-gradient(135deg, #5b86e5 0%, #36d1dc 100%); color: #fff; border: none; padding: 10px 16px; border-radius: 20px; font-weight: 800; cursor: pointer; box-shadow: 0 6px 16px rgba(91,134,229,0.35); }
+		.btn:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(91,134,229,0.5); }
+		.canvas-wrap { display: grid; grid-template-rows: auto auto; gap: 16px; }
+		.canvas-box { background: #fff; border-radius: 14px; padding: 12px; border: 1px solid #eef2f7; }
+		.canvas-title { text-align: center; font-weight: 700; color: #374151; margin-bottom: 8px; }
+		.canvas { width: 100%; height: 240px; border-radius: 8px; }
+		.explain { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+		.card { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 8px 16px rgba(0,0,0,0.06); border-left: 5px solid #36d1dc; }
+		.card .title { font-weight: 800; color: #374151; margin-bottom: 6px; }
+		.card .text { color: #4b5563; line-height: 1.6; font-size: 14px; }
+		.badge { display: inline-block; background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; border-radius: 10px; padding: 2px 8px; font-size: 12px; font-weight: 700; }
+		@media (max-width: 1200px) { .main { grid-template-columns: 1fr; } }
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>⚡ PWM 原理与 PWM 输出 DAC 动画演示</h1>
+		<div class="intro">
+			<p>PWM（Pulse Width Modulation，脉宽调制）通过改变占空比来调节信号的“平均能量”。配合低通滤波器（如 RC），可以把数字的 PWM 信号“平滑”为近似的模拟电压，用作简易 DAC。</p>
+		</div>
+		<div class="main">
+			<div class="panel">
+				<div class="section-title">🎚 参数设置</div>
+				<div class="grid-2">
+					<div>
+						<div class="label">载波频率 f (Hz)</div>
+						<input id="freq" class="input" type="number" min="1" max="20000" step="1" value="1000">
+					</div>
+					<div>
+						<div class="label">占空比 Duty (%)</div>
+						<input id="duty" class="input" type="number" min="0" max="100" step="1" value="50">
+					</div>
+					<div>
+						<div class="label">幅度 Vhigh (V)</div>
+						<input id="vhigh" class="input" type="number" min="0" max="5" step="0.1" value="3.3">
+					</div>
+					<div>
+						<div class="label">采样刷新 (每秒绘制点数)</div>
+						<input id="pps" class="input" type="number" min="100" max="5000" step="100" value="1200">
+					</div>
+					<div>
+						<div class="label">R (kΩ)</div>
+						<input id="rValue" class="input" type="number" min="0.1" max="100" step="0.1" value="10">
+					</div>
+					<div>
+						<div class="label">C (µF)</div>
+						<input id="cValue" class="input" type="number" min="0.01" max="100" step="0.01" value="1">
+					</div>
+				</div>
+				<div class="kpis">
+					<div class="kpi"><div class="t">周期 T</div><div class="v" id="kT">-</div></div>
+					<div class="kpi"><div class="t">占空比 D</div><div class="v" id="kD">-</div></div>
+					<div class="kpi"><div class="t">期望平均值 Vavg</div><div class="v" id="kVavg">-</div></div>
+					<div class="kpi"><div class="t">RC 常数 τ</div><div class="v" id="kTau">-</div></div>
+				</div>
+				<div class="btns">
+					<button class="btn" id="startBtn">开始</button>
+					<button class="btn" id="stopBtn">停止</button>
+					<button class="btn" id="resetBtn">重置</button>
+					<span class="badge" id="status">准备就绪</span>
+				</div>
+			</div>
+			<div class="canvas-wrap">
+				<div class="canvas-box">
+					<div class="canvas-title">PWM 数字波形</div>
+					<canvas id="pwmCanvas" class="canvas"></canvas>
+				</div>
+				<div class="canvas-box">
+					<div class="canvas-title">RC 低通滤波后的“模拟电压” (PWM → DAC)</div>
+					<canvas id="dacCanvas" class="canvas"></canvas>
+				</div>
+			</div>
+		</div>
+		<div class="explain">
+			<div class="card">
+				<div class="title">什么是 PWM？</div>
+				<div class="text">PWM 通过固定频率、改变高电平持续时间来调节占空比 D（0~100%）。在理想情况下，其平均值 Vavg = D × Vhigh。</div>
+			</div>
+			<div class="card">
+				<div class="title">PWM 如何实现“模拟输出”？</div>
+				<div class="text">将 PWM 通过 RC 低通滤波器。滤波器对高频分量衰减、保留直流与低频分量，从而在电容上形成平滑电压，近似等于 Vavg。RC 时间常数 τ = R × C，τ 越大，平滑越强、响应越慢。</div>
+			</div>
+			<div class="card">
+				<div class="title">工程建议</div>
+				<div class="text">选择 f 远大于目标模拟变化速率；τ 合理取值以兼顾纹波与响应；必要时使用二阶或更高阶滤波。</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		let animHandle = null;
+		let lastTimestamp = 0;
+		let phase = 0; // 0~1 相位，用于生成 PWM
+		let yAnalog = 0; // RC 输出当前值
+		const pwmData = [];
+		const dacData = [];
+		const maxPoints = 1000;
+
+		const el = (id) => document.getElementById(id);
+		const statusEl = el('status');
+		const freqEl = el('freq');
+		const dutyEl = el('duty');
+		const vhighEl = el('vhigh');
+		const ppsEl = el('pps');
+		const rEl = el('rValue');
+		const cEl = el('cValue');
+		const kT = el('kT');
+		const kD = el('kD');
+		const kVavg = el('kVavg');
+		const kTau = el('kTau');
+		const pwmCanvas = el('pwmCanvas');
+		const dacCanvas = el('dacCanvas');
+		let pwmCtx, dacCtx;
+
+		function fmt(num, unit="") {
+			if (!isFinite(num)) return '-';
+			if (Math.abs(num) >= 1) return num.toFixed(3).replace(/\.0+$/, '') + unit;
+			if (Math.abs(num) >= 1e-3) return (num*1e3).toFixed(2) + 'm' + unit;
+			if (Math.abs(num) >= 1e-6) return (num*1e6).toFixed(2) + 'µ' + unit;
+			if (Math.abs(num) >= 1e-9) return (num*1e9).toFixed(2) + 'n' + unit;
+			return num.toExponential(2) + unit;
+		}
+
+		function setupCanvas() {
+			[pwmCanvas, dacCanvas].forEach((c) => {
+				const dpr = window.devicePixelRatio || 1;
+				const rect = c.getBoundingClientRect();
+				c.width = rect.width * dpr;
+				c.height = rect.height * dpr;
+				const ctx = c.getContext('2d');
+				ctx.scale(dpr, dpr);
+			});
+			pwmCtx = pwmCanvas.getContext('2d');
+			dacCtx = dacCanvas.getContext('2d');
+			drawGrids();
+		}
+
+		function drawGrids() {
+			[pwmCtx, dacCtx].forEach((ctx) => {
+				if (!ctx) return;
+				const c = ctx.canvas;
+				ctx.clearRect(0, 0, c.clientWidth, c.clientHeight);
+				ctx.fillStyle = '#f8fafc';
+				ctx.fillRect(0, 0, c.clientWidth, c.clientHeight);
+				ctx.strokeStyle = '#e5e7eb';
+				ctx.lineWidth = 1;
+				for (let i = 0; i <= 4; i++) {
+					const y = (c.clientHeight / 4) * i;
+					ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(c.clientWidth, y); ctx.stroke();
+				}
+			});
+		}
+
+		function updateKpis() {
+			const f = clamp(parseFloat(freqEl.value) || 0, 1, 20000);
+			const D = clamp(parseFloat(dutyEl.value) || 0, 0, 100) / 100.0;
+			const Vh = clamp(parseFloat(vhighEl.value) || 0, 0, 10);
+			const R = clamp(parseFloat(rEl.value) || 0.1, 0.1, 1e6) * 1e3; // kΩ → Ω
+			const C = clamp(parseFloat(cEl.value) || 0.01, 0.01, 1e6) * 1e-6; // µF → F
+			const T = 1.0 / f;
+			const tau = R * C;
+			kT.textContent = fmt(T, 's');
+			kD.textContent = (D * 100).toFixed(1).replace(/\.0$/, '') + '%';
+			kVavg.textContent = fmt(D * Vh, 'V');
+			kTau.textContent = fmt(tau, 's');
+		}
+
+		function clamp(v, lo, hi) { return Math.min(Math.max(v, lo), hi); }
+
+		function step(dt) {
+			const f = clamp(parseFloat(freqEl.value) || 0, 1, 20000);
+			const D = clamp(parseFloat(dutyEl.value) || 0, 0, 100) / 100.0;
+			const Vh = clamp(parseFloat(vhighEl.value) || 0, 0, 10);
+			const R = clamp(parseFloat(rEl.value) || 0.1, 0.1, 1e6) * 1e3;
+			const C = clamp(parseFloat(cEl.value) || 0.01, 0.01, 1e6) * 1e-6;
+			const tau = R * C;
+			const pointsPerSec = clamp(parseFloat(ppsEl.value) || 1200, 100, 5000);
+			const targetDt = 1.0 / pointsPerSec;
+
+			// Accumulate time with a fixed draw rate
+			if (dt < targetDt * 0.6) return; // throttle draw
+
+			// Advance PWM phase
+			const T = 1.0 / f;
+			phase = (phase + dt / T) % 1.0;
+			const x = (phase < D) ? Vh : 0.0; // PWM sample (0 or Vh)
+
+			// RC discrete-time low-pass: y += (dt/tau) * (x - y)
+			const alpha = tau > 0 ? Math.min(1.0, dt / tau) : 1.0;
+			yAnalog += alpha * (x - yAnalog);
+
+			pushPoint(pwmData, x);
+			pushPoint(dacData, yAnalog);
+			drawSeries(pwmCtx, pwmData, 0, Vh);
+			drawSeries(dacCtx, dacData, 0, Vh);
+		}
+
+		function pushPoint(arr, v) {
+			arr.push(v);
+			if (arr.length > maxPoints) arr.shift();
+		}
+
+		function drawSeries(ctx, arr, vmin, vmax) {
+			if (!ctx) return;
+			const c = ctx.canvas;
+			const W = c.clientWidth, H = c.clientHeight;
+			ctx.clearRect(0, 0, W, H);
+			// background grid
+			ctx.fillStyle = '#f8fafc'; ctx.fillRect(0, 0, W, H);
+			ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+			for (let i = 0; i <= 4; i++) { const y = (H/4)*i; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+			if (arr.length === 0) return;
+			ctx.strokeStyle = '#2563eb';
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			for (let i = 0; i < arr.length; i++) {
+				const x = (i / (maxPoints - 1)) * W;
+				const norm = (arr[i] - vmin) / Math.max(1e-9, (vmax - vmin));
+				const y = H - norm * H;
+				if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+			}
+			ctx.stroke();
+
+			// draw axes labels
+			ctx.fillStyle = '#374151';
+			ctx.font = '12px Microsoft YaHei';
+			ctx.fillText(fmt(vmax, 'V'), 8, 14);
+			ctx.fillText('0V', 8, H - 6);
+		}
+
+		function start() {
+			if (animHandle) return;
+			statusEl.textContent = '运行中…';
+			lastTimestamp = performance.now();
+			animHandle = requestAnimationFrame(loop);
+		}
+
+		function stop() {
+			if (!animHandle) return;
+			cancelAnimationFrame(animHandle);
+			animHandle = null;
+			statusEl.textContent = '已暂停';
+		}
+
+		function reset() {
+			stop();
+			phase = 0; yAnalog = 0; pwmData.length = 0; dacData.length = 0;
+			drawGrids(); updateKpis(); statusEl.textContent = '准备就绪';
+		}
+
+		function loop(ts) {
+			const dt = Math.min(0.05, (ts - lastTimestamp) / 1000); // clamp to 50ms
+			lastTimestamp = ts;
+			step(dt);
+			animHandle = requestAnimationFrame(loop);
+		}
+
+		function attachEvents() {
+			['freq','duty','vhigh','pps','rValue','cValue'].forEach(id => {
+				el(id).addEventListener('input', () => { updateKpis(); });
+			});
+			el('startBtn').addEventListener('click', start);
+			el('stopBtn').addEventListener('click', stop);
+			el('resetBtn').addEventListener('click', reset);
+			window.addEventListener('resize', () => { setupCanvas(); drawGrids(); });
+		}
+
+		window.addEventListener('load', () => {
+			setupCanvas(); updateKpis(); attachEvents(); reset();
+			setTimeout(() => { if (!animHandle) start(); }, 1200);
+		});
+	</script>
+</body>
+</html>
+
+
