@@ -126,6 +126,7 @@
 
 	<script>
 		let animHandle = null;
+		let intervalHandle = null; // RAF 的降级定时器
 		let lastTimestamp = 0;
 		let phase = 0; // 0~1 相位，用于生成 PWM
 		let yAnalog = 0; // RC 输出当前值
@@ -281,16 +282,26 @@
 		}
 
 		function start() {
-			if (animHandle) return;
+			// 先确保干净状态
+			if (animHandle || intervalHandle) { stop(); }
 			statusEl.textContent = '运行中…';
 			lastTimestamp = performance.now();
-			animHandle = requestAnimationFrame(loop);
+			if (typeof window.requestAnimationFrame === 'function') {
+				animHandle = requestAnimationFrame(loop);
+			} else {
+				// 极端环境降级方案
+				intervalHandle = setInterval(() => {
+					const now = performance.now();
+					const dt = Math.min(0.02, (now - lastTimestamp) / 1000);
+					lastTimestamp = now;
+					step(dt);
+				}, 16);
+			}
 		}
 
 		function stop() {
-			if (!animHandle) return;
-			cancelAnimationFrame(animHandle);
-			animHandle = null;
+			if (animHandle) { cancelAnimationFrame(animHandle); animHandle = null; }
+			if (intervalHandle) { clearInterval(intervalHandle); intervalHandle = null; }
 			statusEl.textContent = '已暂停';
 		}
 
@@ -301,10 +312,13 @@
 		}
 
 		function loop(ts) {
-			const dt = Math.min(0.02, (ts - lastTimestamp) / 1000); // 更高刷新上限（~50fps）
-			lastTimestamp = ts;
-			step(dt);
-			animHandle = requestAnimationFrame(loop);
+			try {
+				const dt = Math.min(0.02, (ts - lastTimestamp) / 1000) || 0.016;
+				lastTimestamp = ts || performance.now();
+				step(dt);
+			} finally {
+				if (animHandle) { animHandle = requestAnimationFrame(loop); }
+			}
 		}
 
 		function attachEvents() {
@@ -319,7 +333,8 @@
 
 		window.addEventListener('load', () => {
 			setupCanvas(); updateKpis(); attachEvents(); reset();
-			setTimeout(() => { if (!animHandle) start(); }, 1200);
+			// 如果初次点击按钮无反应，可自动尝试启动一次
+			setTimeout(() => { if (!animHandle && !intervalHandle) start(); }, 1200);
 		});
 	</script>
 </body>
