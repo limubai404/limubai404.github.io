@@ -50,7 +50,7 @@ jobs:
       # 第4步：构建网站 (最关键的一步)
       # 使用 Hugo 命令生成静态文件，并自动设置正确的 baseURL
       - name: Build with Hugo
-        run: hugo --gc --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
+        run: hugo --gc --minify --baseURL "${{ steps.pages.outputs.base_url }}/" --buildDrafts --buildFuture
 
       # 第5步：上传构建好的网站文件
       - name: Upload artifact
