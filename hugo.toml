@@ -2,6 +2,7 @@ baseURL = "https://limubai404.github.io/"
 languageCode = "zh-cn"
 title = "李慕白的技术博客"
 theme = "PaperMod"
+timeZone = "Asia/Shanghai"
 
 # 修正分页配置
 [pagination]
