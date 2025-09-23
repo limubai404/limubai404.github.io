@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>冒泡排序算法动画演示</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>冒泡排序算法动画演示</h1>
+        
+        <div class="controls">
+            <button id="generate-btn">生成随机数组</button>
+            <button id="start-btn">开始排序</button>
+            <button id="step-btn" disabled>单步执行</button>
+            <button id="reset-btn">重置</button>
+            <select id="preset-select">
+                <option value="random">随机数组</option>
+                <option value="sorted">已排序</option>
+                <option value="reverse">逆序</option>
+                <option value="duplicates">重复元素</option>
+            </select>
+        </div>
+
+        <div class="array-container">
+            <div id="array-display"></div>
+        </div>
+
+        <div class="info-panel">
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="label">比较次数:</span>
+                    <span id="comparisons">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">交换次数:</span>
+                    <span id="swaps">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">当前轮数:</span>
+                    <span id="round">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">状态:</span>
+                    <span id="status">就绪</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="explanation">
+            <div id="step-explanation">
+                点击"开始排序"或"单步执行"来观看冒泡排序的过程
+            </div>
+        </div>
+
+        <div class="algorithm-info">
+            <h3>冒泡排序算法特点</h3>
+            <ul>
+                <li><strong>时间复杂度:</strong> 最好 O(n)，平均/最坏 O(n²)</li>
+                <li><strong>空间复杂度:</strong> O(1)</li>
+                <li><strong>稳定性:</strong> 稳定排序</li>
+                <li><strong>原地排序:</strong> 是</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
